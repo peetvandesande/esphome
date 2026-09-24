@@ -14,10 +14,15 @@ logger:
 
 # Enable Home Assistant API
 api:
+  encryption:
+    key: !secret kitchen_loud_esp32_s3__encryption_key
+  homeassistant_services: true
+  homeassistant_states: true
 
 # Allow Over-The-Air updates
 ota:
 - platform: esphome
+  password: UB!JWEq$G@IsXvJuK$
 
 wifi:
   ssid: !secret wifi_ssid
