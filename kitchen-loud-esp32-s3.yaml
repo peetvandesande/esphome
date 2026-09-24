@@ -49,4 +49,7 @@ speaker:
 media_player:
   - platform: speaker
     name: "Kitchen Loud Speaker"
-    speaker: speaker_max98357
+    announcement_pipeline:
+      speaker: speaker_max98357
+      num_channels: 2
+    icon: "mdi:music-box-multiple-outline"
