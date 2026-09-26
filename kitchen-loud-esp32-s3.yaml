@@ -9,6 +9,10 @@ esp32:
   framework:
     type: esp-idf
 
+psram:
+  mode: octal
+  speed: 80MHz
+
 # Enable logging
 logger:
 
@@ -39,17 +43,33 @@ i2s_audio:
     i2s_bclk_pin: GPIO14
 
 speaker:
+  # 1. Physical Hardware Output
   - platform: i2s_audio
-    id: speaker_max98357
+    id: speaker_hardware
     dac_type: external
     i2s_audio_id: max98357
     i2s_dout_pin: GPIO16
     channel: stereo
 
+  # 2. Mixer generating virtual source inputs
+  - platform: mixer
+    id: speaker_mixer
+    output_speaker: speaker_hardware
+    queue_mode: true
+    source_speakers:
+      - id: spk_announcement
+      - id: spk_media
+
 media_player:
   - platform: speaker
     name: "Kitchen Loud Speaker"
-    announcement_pipeline:
-      speaker: speaker_max98357
-      num_channels: 2
+    id: kitchen_loud_speaker
     icon: "mdi:music-box-multiple-outline"
+    announcement_pipeline:
+      speaker: spk_announcement
+      format: FLAC
+      num_channels: 2
+    media_pipeline:
+      speaker: spk_media
+      format: FLAC
+      num_channels: 2
