@@ -60,11 +60,26 @@ speaker:
       - id: spk_announcement
       - id: spk_media
 
+# Amp unmute pin: GPIO17 on board rev G and later, GPIO8 on rev F
+switch:
+  - platform: gpio
+    id: enable_dac
+    name: "Enable DAC"
+    icon: "mdi:speaker"
+    pin: GPIO17
+    restore_mode: ALWAYS_OFF
+
 media_player:
   - platform: speaker
     name: "Kitchen Loud Speaker"
     id: kitchen_loud_speaker
     icon: "mdi:music-box-multiple-outline"
+    on_play:
+      - switch.turn_on: enable_dac
+    on_announcement:
+      - switch.turn_on: enable_dac
+    on_idle:
+      - switch.turn_off: enable_dac
     announcement_pipeline:
       speaker: spk_announcement
       format: FLAC
