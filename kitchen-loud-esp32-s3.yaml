@@ -12,6 +12,7 @@ esp32:
 psram:
   mode: octal
   speed: 80MHz
+  ignore_not_found: false
 
 # Enable logging
 logger:
@@ -26,11 +27,14 @@ api:
 # Allow Over-The-Air updates
 ota:
 - platform: esphome
-  password: UB!JWEq$G@IsXvJuK$
+  encryption:
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  power_save_mode: none
+  post_connect_roaming: false
+  fast_connect: true
 
 time:
   - platform: homeassistant
