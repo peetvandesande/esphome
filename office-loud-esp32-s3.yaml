@@ -95,7 +95,6 @@ media_player:
       num_channels: 2
 
 esp32_ble_tracker:
-  active: false
 
 bluetooth_proxy:
   active: true
