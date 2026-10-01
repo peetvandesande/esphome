@@ -90,5 +90,5 @@ media_player:
       num_channels: 2
     media_pipeline:
       speaker: spk_media
-      format: FLAC
+      format: NONE
       num_channels: 2
