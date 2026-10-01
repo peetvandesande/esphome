@@ -1,0 +1,94 @@
+esphome:
+  name: kitchen-loud-esp32-s3
+  friendly_name: Kitchen Loud-ESP32-S3
+  min_version: 2026.4.0
+  name_add_mac_suffix: false
+
+esp32:
+  variant: esp32s3
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+  ignore_not_found: false
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret kitchen_loud_esp32_s3__encryption_key
+  homeassistant_services: true
+  homeassistant_states: true
+
+# Allow Over-The-Air updates
+ota:
+- platform: esphome
+  encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  post_connect_roaming: false
+  fast_connect: true
+
+time:
+  - platform: homeassistant
+    id: time_homeassistant_1
+    timezone: Europe/Paris
+
+i2s_audio:
+  - id: max98357
+    i2s_lrclk_pin: GPIO15
+    i2s_bclk_pin: GPIO14
+
+speaker:
+  # 1. Physical Hardware Output
+  - platform: i2s_audio
+    id: speaker_hardware
+    dac_type: external
+    i2s_audio_id: max98357
+    i2s_dout_pin: GPIO16
+    channel: stereo
+
+  # 2. Mixer generating virtual source inputs
+  - platform: mixer
+    id: speaker_mixer
+    output_speaker: speaker_hardware
+    queue_mode: true
+    source_speakers:
+      - id: spk_announcement
+      - id: spk_media
+
+# Amp unmute pin: GPIO17 on board rev G and later, GPIO8 on rev F
+switch:
+  - platform: gpio
+    id: enable_dac
+    name: "Enable DAC"
+    icon: "mdi:speaker"
+    pin: GPIO17
+    restore_mode: ALWAYS_OFF
+
+media_player:
+  - platform: speaker
+    name: "Kitchen Loud Speaker"
+    id: kitchen_loud_speaker
+    icon: "mdi:music-box-multiple-outline"
+    on_play:
+      - switch.turn_on: enable_dac
+    on_announcement:
+      - switch.turn_on: enable_dac
+    on_idle:
+      - switch.turn_off: enable_dac
+    announcement_pipeline:
+      speaker: spk_announcement
+      format: FLAC
+      num_channels: 2
+    media_pipeline:
+      speaker: spk_media
+      format: NONE
+      num_channels: 2
