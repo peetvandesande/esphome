@@ -9,6 +9,7 @@ esp32:
   framework:
     type: esp-idf
 
+  flash_size: 8MB
 psram:
   mode: octal
   speed: 80MHz
@@ -92,3 +93,8 @@ media_player:
       speaker: spk_media
       format: NONE
       num_channels: 2
+
+esp32_ble_tracker:
+
+bluetooth_proxy:
+  active: true
