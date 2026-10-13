@@ -9,11 +9,7 @@ esp32:
   flash_size: 8MB
   framework:
     type: esp-idf
-    sdkconfig_options:
-      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
-      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y
-      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE: y
-      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: /config/esphome/chain-g3.pem
+
 psram:
   mode: octal
   speed: 80MHz
@@ -102,3 +98,7 @@ esp32_ble_tracker:
 
 bluetooth_proxy:
   active: true
+
+http_request:
+  verify_ssl: true
+  ca_certificate_path: chain-g3.pem
