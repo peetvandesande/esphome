@@ -120,6 +120,67 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
 
+  # On while a voice timer is ringing; turn off (or say the wake word) to silence it
+  - platform: template
+    id: timer_ringing
+    name: "Timer ringing"
+    icon: "mdi:timer-alert"
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - mixer_speaker.apply_ducking:
+          id: spk_media
+          decibel_reduction: 20
+          duration: 0s
+      - script.execute: ring_timer
+      - script.execute: timer_ring_timeout
+    on_turn_off:
+      - script.stop: ring_timer
+      - script.stop: timer_ring_timeout
+      - if:
+          condition:
+            media_player.is_announcing: office_speaker
+          then:
+            - media_player.stop:
+                id: office_speaker
+                announcement: true
+      - mixer_speaker.apply_ducking:
+          id: spk_media
+          decibel_reduction: 0
+          duration: 1s
+      - if:
+          condition:
+            media_player.is_idle: office_speaker
+          then:
+            - switch.turn_off: enable_dac
+
+script:
+  - id: ring_timer
+    mode: restart
+    then:
+      - while:
+          condition:
+            switch.is_on: timer_ringing
+          then:
+            - media_player.speaker.play_on_device_media_file:
+                media_file: timer_finished_sound
+                announcement: true
+            - wait_until:
+                condition:
+                  media_player.is_announcing: office_speaker
+                timeout: 1s
+            - wait_until:
+                condition:
+                  not:
+                    media_player.is_announcing: office_speaker
+            - delay: 500ms
+
+  - id: timer_ring_timeout
+    mode: restart
+    then:
+      - delay: 15min
+      - switch.turn_off: timer_ringing
+
 media_player:
   - platform: speaker
     name: "Office Media Player"
@@ -130,15 +191,19 @@ media_player:
     on_announcement:
       - switch.turn_on: enable_dac
     on_idle:
-      # Keep the amp on between the wake chime and the TTS reply
+      # Keep the amp on between the wake chime and the TTS reply, and between timer rings
       - if:
           condition:
-            not: voice_assistant.is_running
+            and:
+              - not: voice_assistant.is_running
+              - switch.is_off: timer_ringing
           then:
             - switch.turn_off: enable_dac
     files:
       - id: wake_word_triggered_sound
         file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/wake_word_triggered.flac
+      - id: timer_finished_sound
+        file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/timer_finished.flac
     announcement_pipeline:
       speaker: spk_announcement
       format: FLAC
@@ -166,21 +231,29 @@ micro_wake_word:
     - model: hey_jarvis
       id: hey_jarvis
   on_wake_word_detected:
+    # Wake word silences a ringing timer instead of starting a command
     - if:
-        condition: voice_assistant.is_running
+        condition:
+          switch.is_on: timer_ringing
         then:
-          - voice_assistant.stop:
+          - switch.turn_off: timer_ringing
+          - micro_wake_word.start:
         else:
           - if:
-              condition:
-                switch.is_on: wake_sound
+              condition: voice_assistant.is_running
               then:
-                - media_player.speaker.play_on_device_media_file:
-                    media_file: wake_word_triggered_sound
-                    announcement: true
-                - delay: 300ms
-          - voice_assistant.start:
-              wake_word: !lambda return wake_word;
+                - voice_assistant.stop:
+              else:
+                - if:
+                    condition:
+                      switch.is_on: wake_sound
+                    then:
+                      - media_player.speaker.play_on_device_media_file:
+                          media_file: wake_word_triggered_sound
+                          announcement: true
+                      - delay: 300ms
+                - voice_assistant.start:
+                    wake_word: !lambda return wake_word;
 
 voice_assistant:
   id: va
@@ -233,3 +306,5 @@ voice_assistant:
           switch.is_on: use_wake_word
         then:
           - micro_wake_word.start:
+  on_timer_finished:
+    - switch.turn_on: timer_ringing
