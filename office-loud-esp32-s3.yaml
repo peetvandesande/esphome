@@ -159,8 +159,12 @@ http_request:
 micro_wake_word:
   id: mww
   microphone: office_mic
+  # Each wake word can be bound to its own Assist pipeline in HA
   models:
     - model: okay_nabu
+      id: okay_nabu
+    - model: hey_jarvis
+      id: hey_jarvis
   on_wake_word_detected:
     - if:
         condition: voice_assistant.is_running
@@ -182,6 +186,7 @@ voice_assistant:
   id: va
   microphone: office_mic
   media_player: office_loud_speaker
+  micro_wake_word: mww
   use_wake_word: false
   noise_suppression_level: 2
   auto_gain: 31dBFS
