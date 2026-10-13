@@ -1,8 +1,15 @@
+substitutions:
+  # Mac running tools/record_mic.py
+  mic_stream_host: 192.168.8.205
+  mic_stream_port: "5005"
+
 esphome:
   name: office-loud-esp32-s3
   friendly_name: Office Loud-ESP32-S3
   min_version: 2026.4.0
   name_add_mac_suffix: false
+  includes:
+    - mic_udp.h
 
 esp32:
   variant: esp32s3
@@ -52,6 +59,24 @@ i2s_audio:
   - id: max98357
     i2s_lrclk_pin: GPIO15
     i2s_bclk_pin: GPIO14
+  # Mic header (I2S1)
+  - id: i2s_mic_bus
+    i2s_lrclk_pin: GPIO40
+    i2s_bclk_pin: GPIO41
+
+microphone:
+  - platform: i2s_audio
+    id: office_mic
+    i2s_audio_id: i2s_mic_bus
+    adc_type: external
+    i2s_din_pin: GPIO39
+    pdm: false
+    # Stereo for testing: the populated header slot (L or R) carries the audio
+    channel: stereo
+    sample_rate: 16000
+    bits_per_sample: 32bit
+    on_data:
+      - lambda: mic_udp::send(x);
 
 speaker:
   # 1. Physical Hardware Output
@@ -79,6 +104,18 @@ switch:
     icon: "mdi:speaker"
     pin: GPIO17
     restore_mode: ALWAYS_OFF
+
+  - platform: template
+    id: mic_stream
+    name: "Mic stream"
+    icon: "mdi:microphone"
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    turn_on_action:
+      - lambda: mic_udp::begin("${mic_stream_host}", ${mic_stream_port});
+      - microphone.capture: office_mic
+    turn_off_action:
+      - microphone.stop_capture: office_mic
 
 media_player:
   - platform: speaker
