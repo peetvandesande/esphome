@@ -8,6 +8,12 @@ esp32:
   variant: esp32s3
   framework:
     type: esp-idf
+    sdkconfig_options:
+      # Keep the default Mozilla bundle and append our own CA chain to it
+      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y
+      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE: y
+      # Relative to the build dir (.esphome/build/<name>/)
+      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: '"../../../chain-g3.pem"'
 
   flash_size: 8MB
 psram:
