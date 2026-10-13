@@ -71,8 +71,8 @@ microphone:
     adc_type: external
     i2s_din_pin: GPIO39
     pdm: false
-    # Stereo for testing: the populated header slot (L or R) carries the audio
-    channel: stereo
+    # INMP441 soldered in the L header slot (LR tied to GND)
+    channel: left
     sample_rate: 16000
     bits_per_sample: 32bit
     on_data:
