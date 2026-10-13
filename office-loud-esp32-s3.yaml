@@ -184,8 +184,9 @@ micro_wake_word:
 
 voice_assistant:
   id: va
-  microphone: office_mic
-  media_player: office_loud_speaker
+  microphone:
+    - microphone: office_mic
+  media_player: office_speaker
   micro_wake_word: mww
   use_wake_word: false
   noise_suppression_level: 2
@@ -206,22 +207,25 @@ voice_assistant:
         decibel_reduction: 20
         duration: 0s
   on_end:
-    - wait_until:
-        not: voice_assistant.is_running
-    - mixer_speaker.apply_ducking:
-        id: spk_media
-        decibel_reduction: 0
-        duration: 1s
-    - if:
-        condition:
-          media_player.is_idle: office_loud_speaker
-        then:
-          - switch.turn_off: enable_dac
-    - if:
-        condition:
-          switch.is_on: use_wake_word
-        then:
-          - micro_wake_word.start:
+    then:
+      - wait_until:
+          condition:
+            not:
+              voice_assistant.is_running:
+      - mixer_speaker.apply_ducking:
+          id: spk_media
+          decibel_reduction: 0
+          duration: 1s
+      - if:
+          condition:
+            media_player.is_idle: office_speaker
+          then:
+            - switch.turn_off: enable_dac
+      - if:
+          condition:
+            switch.is_on: use_wake_word
+          then:
+            - micro_wake_word.start:
   on_error:
     - delay: 1s
     - if:
