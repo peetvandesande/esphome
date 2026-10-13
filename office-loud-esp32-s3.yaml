@@ -1,15 +1,8 @@
-substitutions:
-  # Mac running tools/record_mic.py
-  mic_stream_host: 192.168.8.205
-  mic_stream_port: "5005"
-
 esphome:
   name: office-loud-esp32-s3
   friendly_name: Office Loud-ESP32-S3
   min_version: 2026.4.0
   name_add_mac_suffix: false
-  includes:
-    - mic_udp.h
 
 esp32:
   variant: esp32s3
@@ -75,8 +68,7 @@ microphone:
     channel: left
     sample_rate: 16000
     bits_per_sample: 32bit
-    on_data:
-      - lambda: mic_udp::send(x);
+    use_apll: true
 
 speaker:
   # 1. Physical Hardware Output
@@ -106,16 +98,27 @@ switch:
     restore_mode: ALWAYS_OFF
 
   - platform: template
-    id: mic_stream
-    name: "Mic stream"
-    icon: "mdi:microphone"
+    id: use_wake_word
+    name: "Voice assistant"
+    icon: "mdi:assistant"
     optimistic: true
-    restore_mode: ALWAYS_OFF
-    turn_on_action:
-      - lambda: mic_udp::begin("${mic_stream_host}", ${mic_stream_port});
-      - microphone.capture: office_mic
-    turn_off_action:
-      - microphone.stop_capture: office_mic
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - if:
+          condition: api.connected
+          then:
+            - voice_assistant.stop:
+            - micro_wake_word.start:
+    on_turn_off:
+      - voice_assistant.stop:
+      - micro_wake_word.stop:
+
+  - platform: template
+    id: wake_sound
+    name: "Wake sound"
+    icon: "mdi:bullhorn"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
 
 media_player:
   - platform: speaker
@@ -127,7 +130,15 @@ media_player:
     on_announcement:
       - switch.turn_on: enable_dac
     on_idle:
-      - switch.turn_off: enable_dac
+      # Keep the amp on between the wake chime and the TTS reply
+      - if:
+          condition:
+            not: voice_assistant.is_running
+          then:
+            - switch.turn_off: enable_dac
+    files:
+      - id: wake_word_triggered_sound
+        file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/wake_word_triggered.flac
     announcement_pipeline:
       speaker: spk_announcement
       format: FLAC
@@ -144,3 +155,72 @@ bluetooth_proxy:
 
 http_request:
   verify_ssl: true
+
+micro_wake_word:
+  id: mww
+  microphone: office_mic
+  models:
+    - model: okay_nabu
+  on_wake_word_detected:
+    - if:
+        condition: voice_assistant.is_running
+        then:
+          - voice_assistant.stop:
+        else:
+          - if:
+              condition:
+                switch.is_on: wake_sound
+              then:
+                - media_player.speaker.play_on_device_media_file:
+                    media_file: wake_word_triggered_sound
+                    announcement: true
+                - delay: 300ms
+          - voice_assistant.start:
+              wake_word: !lambda return wake_word;
+
+voice_assistant:
+  id: va
+  microphone: office_mic
+  media_player: office_loud_speaker
+  use_wake_word: false
+  noise_suppression_level: 2
+  auto_gain: 31dBFS
+  on_client_connected:
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
+  on_client_disconnected:
+    - voice_assistant.stop:
+    - micro_wake_word.stop:
+  on_start:
+    # Duck music while listening and replying
+    - mixer_speaker.apply_ducking:
+        id: spk_media
+        decibel_reduction: 20
+        duration: 0s
+  on_end:
+    - wait_until:
+        not: voice_assistant.is_running
+    - mixer_speaker.apply_ducking:
+        id: spk_media
+        decibel_reduction: 0
+        duration: 1s
+    - if:
+        condition:
+          media_player.is_idle: office_loud_speaker
+        then:
+          - switch.turn_off: enable_dac
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
+  on_error:
+    - delay: 1s
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
