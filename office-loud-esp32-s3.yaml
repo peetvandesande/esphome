@@ -6,10 +6,14 @@ esphome:
 
 esp32:
   variant: esp32s3
+  flash_size: 8MB
   framework:
     type: esp-idf
+    CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
+    CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y   # keep the public CAs for the radio streams
+    CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE: y
+    CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: chain-g3.pem
 
-  flash_size: 8MB
 psram:
   mode: octal
   speed: 80MHz
