@@ -119,8 +119,8 @@ switch:
 
 media_player:
   - platform: speaker
-    name: "Office Loud Speaker"
-    id: office_loud_speaker
+    name: "Office Media Player"
+    id: office_speaker
     icon: "mdi:music-box-multiple-outline"
     on_play:
       - switch.turn_on: enable_dac
