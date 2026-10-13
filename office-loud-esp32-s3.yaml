@@ -11,10 +11,9 @@ esp32:
     type: esp-idf
     sdkconfig_options:
       CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
-      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y   # keep the public CAs for the radio streams
+      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y
       CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE: y
-      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: chain-g3.pem
-
+      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: /chain-g3.pem
 psram:
   mode: octal
   speed: 80MHz
