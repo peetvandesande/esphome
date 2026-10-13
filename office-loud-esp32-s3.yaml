@@ -9,10 +9,11 @@ esp32:
   flash_size: 8MB
   framework:
     type: esp-idf
-    CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
-    CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y   # keep the public CAs for the radio streams
-    CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE: y
-    CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: chain-g3.pem
+    sdkconfig_options:
+      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
+      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL: y   # keep the public CAs for the radio streams
+      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE: y
+      CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH: chain-g3.pem
 
 psram:
   mode: octal
