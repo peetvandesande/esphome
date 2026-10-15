@@ -80,6 +80,15 @@ switch:
     pin: GPIO17
     restore_mode: ALWAYS_OFF
 
+button:
+  - platform: template
+    id: stop_media_player
+    name: "Stop media player"
+    icon: "mdi:stop"
+    on_press:
+      - media_player.stop: kitchen_loud_speaker
+      - switch.turn_off: enable_dac
+
 # Explicitly enable all codecs    
 audio:
   codecs:
