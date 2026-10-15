@@ -98,16 +98,6 @@ switch:
     restore_mode: ALWAYS_OFF
 
   - platform: template
-    id: stop_media_player
-    name: "Stop media player"
-    icon: "mdi:volume-mute"
-    optimistic: true
-    on_turn_on:
-      then:
-        - media_player.stop: office_speaker
-        - switch.turn_off: enable_dac
-
-  - platform: template
     id: use_wake_word
     name: "Voice assistant"
     icon: "mdi:assistant"
@@ -163,6 +153,15 @@ switch:
             media_player.is_idle: office_speaker
           then:
             - switch.turn_off: enable_dac
+
+button:
+  - platform: template
+    id: stop_media_player
+    name: "Stop media player"
+    icon: "mdi:stop"
+    on_press:
+      - media_player.stop: office_speaker
+      - switch.turn_off: enable_dac
 
 script:
   - id: ring_timer
